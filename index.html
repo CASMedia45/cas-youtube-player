@@ -27,7 +27,7 @@ iframe {
 
 <iframe
     id="youtube"
-    allow="autoplay; encrypted-media; fullscreen"
+    allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
     allowfullscreen>
 </iframe>
 
@@ -52,7 +52,7 @@ if (videoId) {
             + "&loop=1"
             + "&playlist=" + videoId
             + "&rel=0"
-            + "&playsinline=1";
+            + "&playsinline=1"
             + "&origin=https://casmedia45.github.io";
 
         document.getElementById("youtube").src = youtubeURL;
