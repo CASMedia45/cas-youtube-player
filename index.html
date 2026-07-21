@@ -27,7 +27,7 @@ iframe {
 
 <iframe
     id="youtube"
-    allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+    allow="autoplay; encrypted-media; fullscreen"
     allowfullscreen>
 </iframe>
 
@@ -35,9 +35,7 @@ iframe {
 <script>
 
 const params = new URLSearchParams(window.location.search);
-
 const videoId = params.get("videoId");
-
 
 if (videoId) {
 
@@ -46,24 +44,23 @@ if (videoId) {
         const youtubeURL =
             "https://www.youtube.com/embed/"
             + videoId
-            + "?autoplay=1"
+            + "?playlist="
+            + videoId
+            + "&autoplay=1"
             + "&mute=0"
             + "&controls=0"
             + "&loop=1"
-            + "&playlist=" + videoId
             + "&rel=0"
-            + "&playsinline=1"
-            + "&origin=https://casmedia45.github.io";
+            + "&playsinline=1";
 
         document.getElementById("youtube").src = youtubeURL;
 
     }, 2000);
 
-
 } else {
 
     document.body.innerHTML =
-    "<h1 style='color:white;text-align:center;margin-top:40%;'>No YouTube Video ID Provided</h1>";
+    "<h1 style='color:white;text-align:center;'>No Video ID</h1>";
 
 }
 
