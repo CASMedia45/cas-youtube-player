@@ -1,1 +1,53 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>CAS YouTube Player</title>
+
+<style>
+html, body {
+    margin:0;
+    padding:0;
+    width:100%;
+    height:100%;
+    background:#000;
+    overflow:hidden;
+}
+
+iframe{
+    position:absolute;
+    width:100%;
+    height:100%;
+    border:0;
+}
+</style>
+</head>
+
+<body>
+
+<iframe id="player"
+        allow="autoplay; encrypted-media"
+        allowfullscreen>
+</iframe>
+
+<script>
+
+const params = new URLSearchParams(window.location.search);
+
+const videoId = params.get("videoId") || "M7lc1UVf-VE";
+const autoplay = params.get("autoplay") || "1";
+const mute = params.get("mute") || "1";
+const controls = params.get("controls") || "0";
+const loop = params.get("loop") || "1";
+const rel = params.get("rel") || "0";
+
+document.getElementById("player").src =
+`https://www.youtube.com/embed/${videoId}?autoplay=${autoplay}&mute=${mute}&controls=${controls}&loop=${loop}&playlist=${videoId}&rel=${rel}`;
+
+</script>
+
+</body>
+</html>
