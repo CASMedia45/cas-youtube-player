@@ -6,18 +6,18 @@
 
 <style>
 html, body {
-    margin:0;
-    padding:0;
-    width:100%;
-    height:100%;
-    background:black;
-    overflow:hidden;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background: black;
+    overflow: hidden;
 }
 
 iframe {
-    width:100%;
-    height:100%;
-    border:0;
+    width: 100%;
+    height: 100%;
+    border: 0;
 }
 </style>
 
@@ -26,16 +26,46 @@ iframe {
 <body>
 
 <iframe
-id="youtube"
-allow="autoplay; encrypted-media; fullscreen"
-allowfullscreen>
+    id="youtube"
+    allow="autoplay; encrypted-media; fullscreen"
+    allowfullscreen>
 </iframe>
 
+
 <script>
-setTimeout(function(){
-    document.getElementById("youtube").src =
-    "https://www.youtube.com/embed/M7lc1UVf-VE?playlist=M7lc1UVf-VE&autoplay=1&mute=0&controls=0&loop=1&rel=0&playsinline=1";
-},2000);
+
+const params = new URLSearchParams(window.location.search);
+
+const videoId = params.get("videoId");
+
+
+if (videoId) {
+
+    setTimeout(function() {
+
+        const youtubeURL =
+            "https://www.youtube.com/embed/"
+            + videoId
+            + "?autoplay=1"
+            + "&mute=0"
+            + "&controls=0"
+            + "&loop=1"
+            + "&playlist=" + videoId
+            + "&rel=0"
+            + "&playsinline=1";
+
+        document.getElementById("youtube").src = youtubeURL;
+
+    }, 2000);
+
+
+} else {
+
+    document.body.innerHTML =
+    "<h1 style='color:white;text-align:center;margin-top:40%;'>No YouTube Video ID Provided</h1>";
+
+}
+
 </script>
 
 </body>
