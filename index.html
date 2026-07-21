@@ -82,6 +82,9 @@
       const controls = urlParams.get("controls")
         ? urlParams.get("controls")
         : CONTROLS_DEFAULT;
+      const cc = urlParams.get("cc")
+  ? urlParams.get("cc")
+  : "0";
 
       const showInfo = urlParams.get("showinfo")
         ? urlParams.get("showinfo")
@@ -92,10 +95,10 @@
       let srcUrl;
       if (isMultiVideoPlaylist) {
         // Build video player URL for playlist
-        srcUrl = `https://www.youtube.com/embed/${videoId}?listType=playlist&list=${listId}&autoplay=${autoplay}&mute=${mute}&rel=${rel}&controls=${controls}&showinfo=${showInfo}&loop=${loop}`;
+        srcUrl = `https://www.youtube.com/embed/${videoId}?listType=playlist&list=${listId}&autoplay=${autoplay}&mute=${mute}&rel=${rel}&controls=${controls}&showinfo=${showInfo}&loop=${loop}&cc=${cc}`;
       } else {
         // Build video player URL for single video
-        srcUrl = `https://www.youtube.com/embed/${videoId}?playlist=${playlistId}&autoplay=${autoplay}&mute=${mute}&rel=${rel}&controls=${controls}&showinfo=${showInfo}&loop=${loop}`;
+        srcUrl = `https://www.youtube.com/embed/${videoId}?playlist=${playlistId}&autoplay=${autoplay}&mute=${mute}&rel=${rel}&controls=${controls}&showinfo=${showInfo}&loop=${loop}&cc=${cc}`;
       }
 
       // MAGIC!
