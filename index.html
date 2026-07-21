@@ -28,9 +28,11 @@ iframe{
 
 <body>
 
-<iframe id="player"
-        allow="autoplay; encrypted-media"
-        allowfullscreen>
+<iframe
+    id="player"
+    allow="autoplay; fullscreen; encrypted-media"
+    allowfullscreen
+    referrerpolicy="strict-origin-when-cross-origin">
 </iframe>
 
 <script>
@@ -38,13 +40,11 @@ iframe{
 const params = new URLSearchParams(window.location.search);
 
 const videoId = params.get("videoId") || "M7lc1UVf-VE";
-const autoplay = params.get("autoplay") || "1";
-const mute = params.get("mute") || "1";
-const controls = params.get("controls") || "0";
-const loop = params.get("loop") || "1";
-const rel = params.get("rel") || "0";
 
-document.getElementById("player").src =
+const src =
+`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}&playsinline=1&rel=0`;
+
+document.getElementById("player").src = src;
 `https://www.youtube.com/embed/${videoId}?autoplay=${autoplay}&mute=${mute}&controls=${controls}&loop=${loop}&playlist=${videoId}&rel=${rel}`;
 
 </script>
