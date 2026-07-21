@@ -1,41 +1,13 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta charset="UTF-8">
-<title>CAS YouTube Test</title>
+<body style="margin:0;background:black;">
 
-<style>
-html, body {
-    margin:0;
-    padding:0;
-    width:100%;
-    height:100%;
-    background:black;
-    overflow:hidden;
-}
+<video
+src="https://www.w3schools.com/html/mov_bbb.mp4"
+autoplay
+controls
+style="width:100%;height:100%;">
+</video>
 
-iframe {
-    width:100%;
-    height:100%;
-    border:0;
-}
-</style>
-
-</head>
-
-<body>
-
-<iframe
-id="youtube"
-allow="autoplay; encrypted-media; fullscreen"
-allowfullscreen>
-</iframe>
-
-<script>
-setTimeout(function(){
-document.getElementById("youtube").src =
-"https://www.youtube.com/embed/M7lc1UVf-VE?playlist=M7lc1UVf-VE&autoplay=1&mute=0&controls=0&loop=1&rel=0&playsinline=1";
-},2000);
-</script>
 </body>
 </html>
