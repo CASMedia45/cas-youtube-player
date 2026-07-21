@@ -32,31 +32,10 @@ allowfullscreen>
 </iframe>
 
 <script>
-
-const params = new URLSearchParams(window.location.search);
-
-const videoId = params.get("videoId");
-
-if (videoId) {
-
+setTimeout(function(){
     document.getElementById("youtube").src =
-    "https://www.youtube.com/embed/" 
-    + videoId
-    + "?autoplay=1"
-    + "&mute=0"
-    + "&controls=0"
-    + "&loop=1"
-    + "&playlist=" + videoId
-    + "&rel=0"
-    + "&playsinline=1";
-
-} else {
-
-    document.body.innerHTML =
-    "<h1 style='color:white;text-align:center;'>No video ID provided</h1>";
-
-}
-
+    "https://www.youtube.com/embed/M7lc1UVf-VE?playlist=M7lc1UVf-VE&autoplay=1&mute=0&controls=0&loop=1&rel=0&playsinline=1";
+},2000);
 </script>
 
 </body>
