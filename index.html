@@ -26,10 +26,16 @@ iframe {
 <body>
 
 <iframe
-src="https://www.youtube.com/embed/M7lc1UVf-VE?playlist=M7lc1UVf-VE&autoplay=1&mute=0&controls=0&loop=1&rel=0&playsinline=1"
+id="youtube"
 allow="autoplay; encrypted-media; fullscreen"
 allowfullscreen>
 </iframe>
 
+<script>
+setTimeout(function(){
+document.getElementById("youtube").src =
+"https://www.youtube.com/embed/M7lc1UVf-VE?playlist=M7lc1UVf-VE&autoplay=1&mute=0&controls=0&loop=1&rel=0&playsinline=1";
+},2000);
+</script>
 </body>
 </html>
