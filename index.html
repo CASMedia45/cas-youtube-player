@@ -1,109 +1,88 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>YouTube Player</title>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>CAS YouTube Player</title>
 
-    <!-- Make sure referrer is set correctly -->
-    <meta name="referrer" content="strict-origin-when-cross-origin" />
+<style>
+html,body{
+    margin:0;
+    width:100%;
+    height:100%;
+    background:black;
+    overflow:hidden;
+}
 
-    <style>
-      html,
-      body {
-        margin: 0;
-        padding: 0;
-        height: 100%;
-        overflow: hidden;
-        background: black;
-      }
-      iframe {
-        width: 100%;
-        height: 100%;
-        border: none;
-      }
-    </style>
-  </head>
-  <body>
-    <iframe
-      id="youtube-iframe"
-      referrerpolicy="strict-origin-when-cross-origin"
-      src=""
-      allowfullscreen
-      allow="autoplay; encrypted-media"
-    ></iframe>
+#player{
+    width:100%;
+    height:100%;
+}
+</style>
 
-    <script>
-      /*
-        - Tested on series 5 OS 9.0.211, 9.1.92
-        - Tested on series 4 OS 8.5.64, 9.1.92
-        - Tested on series 3 OS 8.5.64, 9.1.92
-      */
+<script src="https://www.youtube.com/iframe_api"></script>
 
-      // --- DEFAULTS ---
-      const AUTOPLAY_DEFAULT = "1";
-      const MUTE_DEFAULT = "0";
-      const REL_DEFAULT = "0";
-      const CONTROLS_DEFAULT = "0";
-      const SHOWINFO_DEFAULT = "0";
-      const LOOP_DEFAULT = "0";
-      // ----------------
+</head>
 
-      const queryString = window.location.search;
-      const urlParams = new URLSearchParams(queryString);
-      const videoId = urlParams.get("videoId");
+<body>
 
-      // TO DO: Add logic to display error if videoId is missing
-      if (!videoId) {
-        console.error("videoId parameter is missing");
-      }
+<div id="player"></div>
 
-      // Get configuration parameters from URL or set defaults
-      const playlistId = urlParams.get("playlist")
-        ? urlParams.get("playlist")
-        : videoId;
+<script>
 
-      let isMultiVideoPlaylist = false;
-      let listId = "";
+const params = new URLSearchParams(window.location.search);
 
-      if (urlParams.get("list")) {
-        isMultiVideoPlaylist = true;
-        listId = urlParams.get("list");
-      }
+const videoId = params.get("videoId");
 
-      const autoplay = urlParams.get("autoplay")
-        ? urlParams.get("autoplay")
-        : AUTOPLAY_DEFAULT;
+const autoplay = params.get("autoplay") || "1";
+const mute = params.get("mute") || "0";
+const controls = params.get("controls") || "0";
+const loop = params.get("loop") || "1";
+const rel = params.get("rel") || "0";
 
-      const mute = urlParams.get("mute") ? urlParams.get("mute") : MUTE_DEFAULT;
+let player;
 
-      const rel = urlParams.get("rel") ? urlParams.get("rel") : REL_DEFAULT;
+function onYouTubeIframeAPIReady(){
 
-      const controls = urlParams.get("controls")
-        ? urlParams.get("controls")
-        : CONTROLS_DEFAULT;
-      const cc = urlParams.get("cc")
-  ? urlParams.get("cc")
-  : "0";
+    player = new YT.Player("player",{
 
-      const showInfo = urlParams.get("showinfo")
-        ? urlParams.get("showinfo")
-        : SHOWINFO_DEFAULT;
+        width:"100%",
+        height:"100%",
 
-      const loop = urlParams.get("loop") ? urlParams.get("loop") : LOOP_DEFAULT;
+        videoId:videoId,
 
-      let srcUrl;
-      if (isMultiVideoPlaylist) {
-        // Build video player URL for playlist
-        srcUrl = `https://www.youtube.com/embed/${videoId}?listType=playlist&list=${listId}&autoplay=${autoplay}&mute=${mute}&rel=${rel}&controls=${controls}&showinfo=${showInfo}&loop=${loop}&cc_load_policy=0`;
-      } else {
-        // Build video player URL for single video
-        srcUrl = `https://www.youtube.com/embed/${videoId}?playlist=${playlistId}&autoplay=${autoplay}&mute=${mute}&rel=${rel}&controls=${controls}&showinfo=${showInfo}&loop=${loop}&cc_load_policy=0`;
-      }
+        playerVars:{
+            autoplay:Number(autoplay),
+            controls:Number(controls),
+            rel:Number(rel),
+            loop:Number(loop),
+            playlist:videoId,
+            playsinline:1,
+            modestbranding:1,
+            iv_load_policy:3,
+            fs:0
+        },
 
-      // MAGIC!
-      const youTubeIframe = document.getElementById("youtube-iframe");
-      youTubeIframe.setAttribute("src", srcUrl);
-    </script>
-  </body>
+        events:{
+            onReady:onPlayerReady
+        }
+
+    });
+
+}
+
+function onPlayerReady(event){
+
+    if(mute==="1"){
+        event.target.mute();
+    }else{
+        event.target.unMute();
+    }
+
+    event.target.playVideo();
+
+}
+
+</script>
+
+</body>
 </html>
