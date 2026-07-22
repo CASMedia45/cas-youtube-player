@@ -95,10 +95,10 @@
       let srcUrl;
       if (isMultiVideoPlaylist) {
         // Build video player URL for playlist
-        srcUrl = `https://www.youtube.com/embed/${videoId}?listType=playlist&list=${listId}&autoplay=${autoplay}&mute=${mute}&rel=${rel}&controls=${controls}&showinfo=${showInfo}&loop=${loop}&cc=0`;
+        srcUrl = `https://www.youtube.com/embed/${videoId}?listType=playlist&list=${listId}&autoplay=${autoplay}&mute=${mute}&rel=${rel}&controls=${controls}&showinfo=${showInfo}&loop=${loop}&cc_load_policy=0`;
       } else {
         // Build video player URL for single video
-        srcUrl = `https://www.youtube.com/embed/${videoId}?playlist=${playlistId}&autoplay=${autoplay}&mute=${mute}&rel=${rel}&controls=${controls}&showinfo=${showInfo}&loop=${loop}&cc=0`;
+        srcUrl = `https://www.youtube.com/embed/${videoId}?playlist=${playlistId}&autoplay=${autoplay}&mute=${mute}&rel=${rel}&controls=${controls}&showinfo=${showInfo}&loop=${loop}&cc_load_policy=0`;
       }
 
       // MAGIC!
