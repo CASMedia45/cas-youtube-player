@@ -38,6 +38,7 @@ const mute = params.get("mute") || "0";
 const controls = params.get("controls") || "0";
 const loop = params.get("loop") || "1";
 const rel = params.get("rel") || "0";
+const cc = params.get("cc") || "0"; // 0 = captions off by default, 1 = captions on
 
 let player;
 
@@ -59,15 +60,28 @@ function onYouTubeIframeAPIReady(){
             playsinline:1,
             modestbranding:1,
             iv_load_policy:3,
+            cc_load_policy:Number(cc),
             fs:0
         },
 
         events:{
-            onReady:onPlayerReady
+            onReady:onPlayerReady,
+            onStateChange:onPlayerStateChange
         }
 
     });
 
+}
+
+function killCaptions(target){
+    // undocumented but real: the captions module exposes loadModule/
+    // unloadModule, which is the same call YouTube's own CC button makes.
+    // cc_load_policy only sets a *default* -- it can't override a viewer's
+    // (or a device's browser profile's) stored caption preference. This
+    // forcibly tears the module down instead of just deferring to it.
+    try{
+        target.unloadModule("captions");
+    }catch(e){}
 }
 
 function onPlayerReady(event){
@@ -78,7 +92,23 @@ function onPlayerReady(event){
         event.target.unMute();
     }
 
+    if(cc==="0"){
+        killCaptions(event.target);
+    }
+
     event.target.playVideo();
+
+}
+
+function onPlayerStateChange(event){
+
+    // The captions module often only actually attaches once playback
+    // starts, so re-issue the kill right as the video transitions to
+    // playing (state 1), and once more shortly after for good measure.
+    if(cc==="0" && event.data === 1){
+        killCaptions(event.target);
+        setTimeout(function(){ killCaptions(event.target); }, 1500);
+    }
 
 }
 
