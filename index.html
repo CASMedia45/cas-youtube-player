@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 
 <style>
+
 html, body {
     margin: 0;
     padding: 0;
@@ -17,28 +18,32 @@ html, body {
     position: absolute;
     left: 0;
     top: 0;
+
     width: 100%;
-    height: 100%;
+    height: calc(100% - 120px);
 }
 
-#testbox {
+#diagnostic {
     position: absolute;
-    left: 20px;
-    top: 20px;
+    left: 0;
+    bottom: 0;
 
-    width: 500px;
-    height: 150px;
+    width: 100%;
+    height: 120px;
 
-    background: red;
+    box-sizing: border-box;
+
+    background: black;
     color: white;
 
-    font-family: Arial, sans-serif;
-    font-size: 24px;
+    padding: 10px 20px;
 
-    padding: 20px;
+    font-family: Arial, sans-serif;
+    font-size: 18px;
 
     z-index: 1000000;
 }
+
 </style>
 
 <script src="https://www.youtube.com/iframe_api"></script>
@@ -49,41 +54,156 @@ html, body {
 
 <div id="player"></div>
 
-<div id="testbox">
-DIAGNOSTIC TEST<br>
-If you can see this red box,<br>
-HTML overlays are working.
+<div id="diagnostic">
+Loading diagnostic...
 </div>
 
 <script>
 
-const params = new URLSearchParams(window.location.search);
+const params =
+    new URLSearchParams(window.location.search);
 
-const videoId = params.get("videoId");
+const videoId =
+    params.get("videoId");
 
 let player;
 
+
+function updateDiagnostic() {
+
+    let quality = "unknown";
+    let available = "unknown";
+
+    try {
+        quality =
+            player.getPlaybackQuality();
+    } catch(e) {}
+
+    try {
+        available =
+            player.getAvailableQualityLevels()
+                .join(", ");
+    } catch(e) {}
+
+    document.getElementById(
+        "diagnostic"
+    ).innerHTML =
+
+        "<b>YouTube Quality:</b> " +
+        quality +
+
+        " &nbsp;&nbsp; " +
+
+        "<b>Available:</b> " +
+        available +
+
+        "<br>" +
+
+        "<b>Screen:</b> " +
+        screen.width +
+        " x " +
+        screen.height +
+
+        " &nbsp;&nbsp; " +
+
+        "<b>Viewport:</b> " +
+        window.innerWidth +
+        " x " +
+        window.innerHeight +
+
+        " &nbsp;&nbsp; " +
+
+        "<b>Pixel Ratio:</b> " +
+        window.devicePixelRatio;
+
+}
+
+
+function killCaptions(target) {
+
+    try {
+        target.unloadModule("captions");
+    } catch(e) {}
+
+}
+
+
 function onYouTubeIframeAPIReady() {
 
-    player = new YT.Player("player", {
+    player =
+        new YT.Player(
+            "player",
+            {
 
-        width: "100%",
-        height: "100%",
+                width: "100%",
+                height: "100%",
 
-        videoId: videoId,
+                videoId: videoId,
 
-        playerVars: {
-            autoplay: 1,
-            controls: 0,
-            rel: 0,
-            playsinline: 1,
-            modestbranding: 1,
-            iv_load_policy: 3,
-            cc_load_policy: 0,
-            fs: 0
-        }
+                playerVars: {
 
-    });
+                    autoplay: 1,
+                    controls: 0,
+                    rel: 0,
+                    playsinline: 1,
+                    modestbranding: 1,
+                    iv_load_policy: 3,
+                    cc_load_policy: 0,
+                    fs: 0
+
+                },
+
+                events: {
+
+                    onReady: function(event) {
+
+                        killCaptions(
+                            event.target
+                        );
+
+                        event.target.playVideo();
+
+                        updateDiagnostic();
+
+                        setTimeout(
+                            updateDiagnostic,
+                            2000
+                        );
+
+                        setTimeout(
+                            updateDiagnostic,
+                            5000
+                        );
+
+                        setTimeout(
+                            updateDiagnostic,
+                            10000
+                        );
+
+                    },
+
+                    onStateChange:
+                        function(event) {
+
+                            killCaptions(
+                                event.target
+                            );
+
+                            updateDiagnostic();
+
+                        },
+
+                    onPlaybackQualityChange:
+                        function(event) {
+
+                            updateDiagnostic();
+
+                        }
+
+                }
+
+            }
+        );
 
 }
 
