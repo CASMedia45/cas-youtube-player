@@ -2,10 +2,8 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>CAS YouTube Player Diagnostic</title>
 
 <style>
-
 html, body {
     margin: 0;
     padding: 0;
@@ -23,32 +21,24 @@ html, body {
     height: 100%;
 }
 
-#diagnostic {
-    position: fixed;
-    top: 15px;
-    left: 15px;
-    z-index: 999999;
+#testbox {
+    position: absolute;
+    left: 20px;
+    top: 20px;
 
+    width: 500px;
+    height: 150px;
+
+    background: red;
     color: white;
-    background: rgba(0,0,0,0.90);
-
-    border: 2px solid white;
-
-    padding: 12px 16px;
 
     font-family: Arial, sans-serif;
-    font-size: 16px;
-    line-height: 1.45;
+    font-size: 24px;
 
-    max-width: 700px;
+    padding: 20px;
 
-    display: block;
-    visibility: visible;
-    opacity: 1;
-
-    pointer-events: none;
+    z-index: 1000000;
 }
-
 </style>
 
 <script src="https://www.youtube.com/iframe_api"></script>
@@ -59,8 +49,10 @@ html, body {
 
 <div id="player"></div>
 
-<div id="diagnostic">
-    Starting diagnostic...
+<div id="testbox">
+DIAGNOSTIC TEST<br>
+If you can see this red box,<br>
+HTML overlays are working.
 </div>
 
 <script>
@@ -69,466 +61,29 @@ const params = new URLSearchParams(window.location.search);
 
 const videoId = params.get("videoId");
 
-const autoplay = params.get("autoplay") || "1";
-const mute = params.get("mute") || "0";
-const controls = params.get("controls") || "0";
-const loop = params.get("loop") || "1";
-const rel = params.get("rel") || "0";
-const cc = params.get("cc") || "0";
-
 let player;
-
-
-/*
- * REMOVE CAPTIONS
- * This is the working code from your previous version.
- */
-
-function killCaptions(target) {
-
-    try {
-
-        target.unloadModule("captions");
-
-    } catch(e) {}
-
-}
-
-
-/*
- * CHECK HTML5 VIDEO CODEC SUPPORT
- */
-
-function getVideoSupport() {
-
-    let video;
-
-    try {
-
-        video = document.createElement("video");
-
-    } catch(e) {
-
-        return {
-            h264: "error",
-            vp9: "error",
-            av1: "error"
-        };
-
-    }
-
-
-    let h264 = "unknown";
-    let vp9 = "unknown";
-    let av1 = "unknown";
-
-
-    try {
-
-        h264 =
-            video.canPlayType(
-                'video/mp4; codecs="avc1.42E01E"'
-            ) || "no";
-
-    } catch(e) {
-
-        h264 = "error";
-
-    }
-
-
-    try {
-
-        vp9 =
-            video.canPlayType(
-                'video/webm; codecs="vp9"'
-            ) || "no";
-
-    } catch(e) {
-
-        vp9 = "error";
-
-    }
-
-
-    try {
-
-        av1 =
-            video.canPlayType(
-                'video/mp4; codecs="av01.0.05M.08"'
-            ) || "no";
-
-    } catch(e) {
-
-        av1 = "error";
-
-    }
-
-
-    return {
-
-        h264: h264,
-        vp9: vp9,
-        av1: av1
-
-    };
-
-}
-
-
-/*
- * UPDATE DIAGNOSTIC
- */
-
-function updateDiagnostic() {
-
-    const diagnostic =
-        document.getElementById("diagnostic");
-
-
-    if (!player) {
-
-        diagnostic.innerHTML =
-            "YouTube player not ready";
-
-        return;
-
-    }
-
-
-    let quality = "unknown";
-    let available = "unknown";
-
-    let playerWidth = "unknown";
-    let playerHeight = "unknown";
-
-
-    /*
-     * YouTube information
-     */
-
-    try {
-
-        quality =
-            player.getPlaybackQuality();
-
-    } catch(e) {}
-
-
-    try {
-
-        available =
-            player
-                .getAvailableQualityLevels()
-                .join(", ");
-
-    } catch(e) {}
-
-
-    /*
-     * Player dimensions
-     */
-
-    try {
-
-        playerWidth =
-            player.getIframe().clientWidth;
-
-        playerHeight =
-            player.getIframe().clientHeight;
-
-    } catch(e) {}
-
-
-    /*
-     * Browser information
-     */
-
-    const screenWidth =
-        window.screen.width;
-
-    const screenHeight =
-        window.screen.height;
-
-    const viewportWidth =
-        window.innerWidth;
-
-    const viewportHeight =
-        window.innerHeight;
-
-    const devicePixelRatio =
-        window.devicePixelRatio;
-
-
-    /*
-     * Video codec support
-     */
-
-    const codecs =
-        getVideoSupport();
-
-
-    /*
-     * User agent
-     */
-
-    const userAgent =
-        navigator.userAgent;
-
-
-    diagnostic.innerHTML =
-
-        "<b>CAS YouTube Diagnostic</b>" +
-
-        "<br><br>" +
-
-        "<b>YouTube</b>" +
-
-        "<br>Quality: " +
-        quality +
-
-        "<br>Available: " +
-        available +
-
-        "<br>Player Size: " +
-        playerWidth +
-        " x " +
-        playerHeight +
-
-        "<br><br>" +
-
-        "<b>Browser / Display</b>" +
-
-        "<br>Screen: " +
-        screenWidth +
-        " x " +
-        screenHeight +
-
-        "<br>Viewport: " +
-        viewportWidth +
-        " x " +
-        viewportHeight +
-
-        "<br>Pixel Ratio: " +
-        devicePixelRatio +
-
-        "<br><br>" +
-
-        "<b>Video Codec Support</b>" +
-
-        "<br>H.264: " +
-        codecs.h264 +
-
-        "<br>VP9: " +
-        codecs.vp9 +
-
-        "<br>AV1: " +
-        codecs.av1 +
-
-        "<br><br>" +
-
-        "<b>User Agent</b>" +
-
-        "<br>" +
-        userAgent;
-
-}
-
-
-/*
- * CREATE YOUTUBE PLAYER
- */
 
 function onYouTubeIframeAPIReady() {
 
-    player =
-        new YT.Player(
-            "player",
-            {
-
-                width: "100%",
-                height: "100%",
-
-                videoId: videoId,
-
-                playerVars: {
-
-                    autoplay:
-                        Number(autoplay),
-
-                    controls:
-                        Number(controls),
-
-                    rel:
-                        Number(rel),
-
-                    loop:
-                        Number(loop),
-
-                    playlist:
-                        videoId,
-
-                    playsinline: 1,
-
-                    modestbranding: 1,
-
-                    iv_load_policy: 3,
-
-                    cc_load_policy:
-                        Number(cc),
-
-                    fs: 0
-
-                },
-
-                events: {
-
-                    onReady:
-                        onPlayerReady,
-
-                    onStateChange:
-                        onPlayerStateChange,
-
-                    onPlaybackQualityChange:
-                        onPlaybackQualityChange,
-
-                    onError:
-                        onPlayerError
-
-                }
-
-            }
-        );
-
-}
-
-
-/*
- * PLAYER READY
- */
-
-function onPlayerReady(event) {
-
-    if (mute === "1") {
-
-        event.target.mute();
-
-    } else {
-
-        event.target.unMute();
-
-    }
-
-
-    if (cc === "0") {
-
-        killCaptions(
-            event.target
-        );
-
-    }
-
-
-    event.target.playVideo();
-
-
-    /*
-     * Update diagnostic several times
-     * as YouTube finishes initializing.
-     */
-
-    updateDiagnostic();
-
-    setTimeout(
-        updateDiagnostic,
-        1000
-    );
-
-    setTimeout(
-        updateDiagnostic,
-        3000
-    );
-
-    setTimeout(
-        updateDiagnostic,
-        5000
-    );
-
-    setTimeout(
-        updateDiagnostic,
-        10000
-    );
-
-}
-
-
-/*
- * PLAYBACK QUALITY CHANGED
- */
-
-function onPlaybackQualityChange(event) {
-
-    updateDiagnostic();
-
-}
-
-
-/*
- * PLAYER STATE CHANGE
- */
-
-function onPlayerStateChange(event) {
-
-    /*
-     * Remove captions when playback starts.
-     */
-
-    if (
-        cc === "0" &&
-        event.data === 1
-    ) {
-
-        killCaptions(
-            event.target
-        );
-
-
-        setTimeout(
-            function() {
-
-                killCaptions(
-                    event.target
-                );
-
-            },
-            1500
-        );
-
-    }
-
-
-    updateDiagnostic();
-
-}
-
-
-/*
- * YOUTUBE ERROR
- */
-
-function onPlayerError(event) {
-
-    document.getElementById(
-        "diagnostic"
-    ).innerHTML =
-
-        "<b>CAS YouTube Diagnostic</b>" +
-
-        "<br><br>" +
-
-        "<b>YouTube Error:</b> " +
-
-        event.data;
+    player = new YT.Player("player", {
+
+        width: "100%",
+        height: "100%",
+
+        videoId: videoId,
+
+        playerVars: {
+            autoplay: 1,
+            controls: 0,
+            rel: 0,
+            playsinline: 1,
+            modestbranding: 1,
+            iv_load_policy: 3,
+            cc_load_policy: 0,
+            fs: 0
+        }
+
+    });
 
 }
 
