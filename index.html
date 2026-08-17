@@ -5,33 +5,39 @@
 <title>CAS YouTube Player</title>
 
 <style>
-html,body{
-    margin:0;
-    width:100%;
-    height:100%;
-    background:black;
-    overflow:hidden;
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background: black;
+    overflow: hidden;
 }
 
-#player{
-    width:1920px;
-    height:1080px;
-    max-width:100%;
-    max-height:100%;
+#player {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
 }
 
-#diagnostic{
-    position:absolute;
-    top:10px;
-    left:10px;
-    z-index:9999;
-    color:white;
-    background:rgba(0,0,0,0.75);
-    padding:8px 12px;
-    font-family:Arial,sans-serif;
-    font-size:16px;
-    line-height:1.4;
-    pointer-events:none;
+#diagnostic {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 999999;
+    color: white;
+    background: black;
+    border: 2px solid white;
+    padding: 10px 15px;
+    font-family: Arial, sans-serif;
+    font-size: 20px;
+    line-height: 1.5;
+    display: block;
+    visibility: visible;
+    opacity: 1;
+    pointer-events: none;
 }
 </style>
 
@@ -44,7 +50,7 @@ html,body{
 <div id="player"></div>
 
 <div id="diagnostic">
-    Loading...
+    YouTube diagnostic loading...
 </div>
 
 <script>
@@ -64,51 +70,53 @@ let player;
 
 
 /*
- * CAPTION REMOVAL
- * This is the working code that removes captions.
+ * REMOVE CAPTIONS
  */
 
-function killCaptions(target){
+function killCaptions(target) {
 
-    try{
+    try {
         target.unloadModule("captions");
-    }catch(e){}
+    } catch(e) {}
 
 }
 
 
 /*
- * DIAGNOSTIC INFORMATION
+ * UPDATE DIAGNOSTIC
  */
 
-function updateDiagnostic(){
+function updateDiagnostic() {
 
-    if(!player){
+    const diagnostic = document.getElementById("diagnostic");
+
+    if (!player) {
+        diagnostic.innerHTML = "YouTube player not ready";
         return;
     }
 
     let quality = "unknown";
     let available = "unknown";
-    let playerWidth = "unknown";
-    let playerHeight = "unknown";
+    let width = "unknown";
+    let height = "unknown";
 
-    try{
+    try {
         quality = player.getPlaybackQuality();
-    }catch(e){}
+    } catch(e) {}
 
-    try{
+    try {
         available = player.getAvailableQualityLevels().join(", ");
-    }catch(e){}
+    } catch(e) {}
 
-    try{
-        playerWidth = player.getIframe().clientWidth;
-        playerHeight = player.getIframe().clientHeight;
-    }catch(e){}
+    try {
+        width = player.getIframe().clientWidth;
+        height = player.getIframe().clientHeight;
+    } catch(e) {}
 
-    document.getElementById("diagnostic").innerHTML =
+    diagnostic.innerHTML =
         "YouTube Quality: " + quality +
         "<br>Available: " + available +
-        "<br>Player Size: " + playerWidth + " x " + playerHeight;
+        "<br>Player Size: " + width + " x " + height;
 
 }
 
@@ -117,15 +125,15 @@ function updateDiagnostic(){
  * REQUEST 1080P
  */
 
-function request1080(){
+function request1080() {
 
-    if(!player){
+    if (!player) {
         return;
     }
 
-    try{
+    try {
         player.setPlaybackQuality("hd1080");
-    }catch(e){}
+    } catch(e) {}
 
     updateDiagnostic();
 
@@ -136,31 +144,35 @@ function request1080(){
  * CREATE YOUTUBE PLAYER
  */
 
-function onYouTubeIframeAPIReady(){
+function onYouTubeIframeAPIReady() {
 
-    player = new YT.Player("player",{
+    player = new YT.Player("player", {
 
-        width:"1920",
-        height:"1080",
+        width: "100%",
+        height: "100%",
 
-        videoId:videoId,
+        videoId: videoId,
 
-        playerVars:{
-            autoplay:Number(autoplay),
-            controls:Number(controls),
-            rel:Number(rel),
-            loop:Number(loop),
-            playlist:videoId,
-            playsinline:1,
-            modestbranding:1,
-            iv_load_policy:3,
-            cc_load_policy:Number(cc),
-            fs:0
+        playerVars: {
+
+            autoplay: Number(autoplay),
+            controls: Number(controls),
+            rel: Number(rel),
+            loop: Number(loop),
+            playlist: videoId,
+            playsinline: 1,
+            modestbranding: 1,
+            iv_load_policy: 3,
+            cc_load_policy: Number(cc),
+            fs: 0
+
         },
 
-        events:{
-            onReady:onPlayerReady,
-            onStateChange:onPlayerStateChange
+        events: {
+
+            onReady: onPlayerReady,
+            onStateChange: onPlayerStateChange
+
         }
 
     });
@@ -172,63 +184,49 @@ function onYouTubeIframeAPIReady(){
  * PLAYER READY
  */
 
-function onPlayerReady(event){
+function onPlayerReady(event) {
 
-    if(mute==="1"){
+    if (mute === "1") {
         event.target.mute();
-    }else{
+    } else {
         event.target.unMute();
     }
 
-    if(cc==="0"){
+    if (cc === "0") {
         killCaptions(event.target);
     }
 
     event.target.playVideo();
 
-    /*
-     * Request 1080 after playback begins.
-     */
-
-    setTimeout(request1080,1000);
-    setTimeout(request1080,3000);
-    setTimeout(request1080,5000);
-    setTimeout(request1080,10000);
+    setTimeout(request1080, 1000);
+    setTimeout(request1080, 3000);
+    setTimeout(request1080, 5000);
+    setTimeout(request1080, 10000);
 
 }
 
 
 /*
- * PLAYER STATE CHANGES
+ * PLAYER STATE CHANGE
  */
 
-function onPlayerStateChange(event){
+function onPlayerStateChange(event) {
 
-    /*
-     * Continue removing captions.
-     */
-
-    if(cc==="0" && event.data === 1){
+    if (cc === "0" && event.data === 1) {
 
         killCaptions(event.target);
 
-        setTimeout(function(){
-
+        setTimeout(function() {
             killCaptions(event.target);
-
-        },1500);
+        }, 1500);
 
     }
 
-    /*
-     * Request 1080 after playback actually starts.
-     */
+    if (event.data === 1) {
 
-    if(event.data === 1){
-
-        setTimeout(request1080,1000);
-        setTimeout(request1080,3000);
-        setTimeout(request1080,5000);
+        setTimeout(request1080, 1000);
+        setTimeout(request1080, 3000);
+        setTimeout(request1080, 5000);
 
     }
 
