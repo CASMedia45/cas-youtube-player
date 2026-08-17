@@ -1,118 +1,161 @@
+```html
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>CAS YouTube Player</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAS YouTube Player</title>
 
-<style>
-html,body{
-    margin:0;
-    width:100%;
-    height:100%;
-    background:black;
-    overflow:hidden;
-}
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            overflow: hidden;
+        }
 
-#player{
-    width:100%;
-    height:100%;
-}
-</style>
+        #player {
+            width: 100%;
+            height: 100%;
+        }
 
-<script src="https://www.youtube.com/iframe_api"></script>
-
+        /* Temporary diagnostic display */
+        #quality {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 9999;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 10px 14px;
+            font-family: Arial, sans-serif;
+            font-size: 20px;
+            border-radius: 4px;
+        }
+    </style>
 </head>
 
 <body>
 
-<div id="player"></div>
+    <div id="player"></div>
 
-<script>
+    <!-- Temporary quality diagnostic -->
+    <div id="quality">
+        YouTube Quality: Waiting...
+    </div>
 
-const params = new URLSearchParams(window.location.search);
+    <script src="https://www.youtube.com/iframe_api"></script>
 
-const videoId = params.get("videoId");
+    <script>
+        // Get parameters from the URL
+        const params = new URLSearchParams(window.location.search);
 
-const autoplay = params.get("autoplay") || "1";
-const mute = params.get("mute") || "0";
-const controls = params.get("controls") || "0";
-const loop = params.get("loop") || "1";
-const rel = params.get("rel") || "0";
-const cc = params.get("cc") || "0"; // 0 = captions off by default, 1 = captions on
+        const videoId = params.get("videoId");
+        const autoplay = params.get("autoplay") || "1";
+        const mute = params.get("mute") || "0";
 
-let player;
+        let player;
 
-function onYouTubeIframeAPIReady(){
+        // YouTube API calls this automatically when it is ready
+        function onYouTubeIframeAPIReady() {
 
-    player = new YT.Player("player",{
+            player = new YT.Player("player", {
 
-        width:"100%",
-        height:"100%",
+                width: "100%",
+                height: "100%",
 
-        videoId:videoId,
+                videoId: videoId,
 
-        playerVars:{
-            autoplay:Number(autoplay),
-            controls:Number(controls),
-            rel:Number(rel),
-            loop:Number(loop),
-            playlist:videoId,
-            playsinline:1,
-            modestbranding:1,
-            iv_load_policy:3,
-            cc_load_policy:Number(cc),
-            fs:0
-        },
+                playerVars: {
+                    autoplay: Number(autoplay),
+                    controls: 0,
+                    rel: 0,
+                    playsinline: 1,
+                    modestbranding: 1,
+                    iv_load_policy: 3
+                },
 
-        events:{
-            onReady:onPlayerReady,
-            onStateChange:onPlayerStateChange
+                events: {
+                    onReady: onPlayerReady,
+                    onStateChange: onPlayerStateChange,
+                    onPlaybackQualityChange: onPlaybackQualityChange
+                }
+            });
         }
 
-    });
+        // Player ready
+        function onPlayerReady(event) {
 
-}
+            if (mute === "1") {
+                event.target.mute();
+            } else {
+                event.target.unMute();
+            }
 
-function killCaptions(target){
-    // undocumented but real: the captions module exposes loadModule/
-    // unloadModule, which is the same call YouTube's own CC button makes.
-    // cc_load_policy only sets a *default* -- it can't override a viewer's
-    // (or a device's browser profile's) stored caption preference. This
-    // forcibly tears the module down instead of just deferring to it.
-    try{
-        target.unloadModule("captions");
-    }catch(e){}
-}
+            event.target.playVideo();
+        }
 
-function onPlayerReady(event){
+        // Player state changed
+        function onPlayerStateChange(event) {
 
-    if(mute==="1"){
-        event.target.mute();
-    }else{
-        event.target.unMute();
-    }
+            // Keep video playing if YouTube pauses unexpectedly
+            if (event.data === YT.PlayerState.PAUSED) {
+                event.target.playVideo();
+            }
+        }
 
-    if(cc==="0"){
-        killCaptions(event.target);
-    }
+        // This is the important diagnostic function
+        function onPlaybackQualityChange(event) {
 
-    event.target.playVideo();
+            const quality = event.data;
 
-}
+            let displayQuality = quality;
 
-function onPlayerStateChange(event){
+            switch (quality) {
 
-    // The captions module often only actually attaches once playback
-    // starts, so re-issue the kill right as the video transitions to
-    // playing (state 1), and once more shortly after for good measure.
-    if(cc==="0" && event.data === 1){
-        killCaptions(event.target);
-        setTimeout(function(){ killCaptions(event.target); }, 1500);
-    }
+                case "highres":
+                    displayQuality = "HIGH RESOLUTION";
+                    break;
 
-}
+                case "hd1080":
+                    displayQuality = "1080p";
+                    break;
 
-</script>
+                case "hd720":
+                    displayQuality = "720p";
+                    break;
+
+                case "large":
+                    displayQuality = "480p";
+                    break;
+
+                case "medium":
+                    displayQuality = "360p";
+                    break;
+
+                case "small":
+                    displayQuality = "240p";
+                    break;
+            }
+
+            document.getElementById("quality").innerHTML =
+                "YouTube Quality: <strong>" +
+                displayQuality +
+                "</strong><br>" +
+                "API: " +
+                quality +
+                "<br>" +
+                "Viewport: " +
+                window.innerWidth +
+                " x " +
+                window.innerHeight;
+
+            console.log("YouTube playback quality:", quality);
+        }
+    </script>
 
 </body>
 </html>
+```
