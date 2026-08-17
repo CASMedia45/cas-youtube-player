@@ -1,258 +1,120 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
+    <meta charset="UTF-8">
 
-<title>CAS YouTube Diagnostic</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-<style>
+    <title>CAS YouTube Player</title>
 
-html, body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    background: black;
-    overflow: hidden;
-}
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+        }
 
-#player {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-}
+        #player-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+        }
 
-#diagnostic {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-
-    z-index: 999999;
-
-    background: black;
-    color: white;
-
-    border: 3px solid red;
-
-    padding: 12px 16px;
-
-    font-family: Arial, sans-serif;
-    font-size: 18px;
-    line-height: 1.4;
-
-    max-width: 850px;
-
-    pointer-events: none;
-}
-
-</style>
-
-<script src="https://www.youtube.com/iframe_api"></script>
-
+        #youtube-player {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+    </style>
 </head>
 
 <body>
 
-<div id="player"></div>
-
-<div id="diagnostic">
-Loading diagnostic...
+<div id="player-container">
+    <div id="youtube-player"></div>
 </div>
 
 <script>
+    /*
+     * CAS Cable YouTube Player
+     *
+     * Example:
+     * https://casmedia45.github.io/cas-youtube-player/?videoId=ItLAis8kw3s
+     *
+     * Optional:
+     * &autoplay=1
+     * &mute=0
+     */
 
-const params =
-    new URLSearchParams(window.location.search);
+    // ------------------------------------------------------------
+    // GET SETTINGS FROM URL
+    // ------------------------------------------------------------
 
-const videoId =
-    params.get("videoId");
+    const urlParams = new URLSearchParams(window.location.search);
 
-let player;
+    const videoId = urlParams.get("videoId");
 
+    const autoplay =
+        urlParams.get("autoplay") !== "0" ? 1 : 0;
 
-/*
- * CAPTIONS OFF
- */
-
-function killCaptions(target) {
-
-    try {
-
-        target.unloadModule("captions");
-
-    } catch(e) {}
-
-}
-
-
-/*
- * VIDEO CODEC TEST
- */
-
-function codecTest() {
-
-    const video =
-        document.createElement("video");
-
-    let h264 = "no";
-    let vp9 = "no";
-    let av1 = "no";
-
-    try {
-
-        h264 =
-            video.canPlayType(
-                'video/mp4; codecs="avc1.42E01E"'
-            ) || "no";
-
-    } catch(e) {}
+    const mute =
+        urlParams.get("mute") === "0" ? 0 : 1;
 
 
-    try {
+    // ------------------------------------------------------------
+    // MAKE SURE A VIDEO ID WAS PROVIDED
+    // ------------------------------------------------------------
 
-        vp9 =
-            video.canPlayType(
-                'video/webm; codecs="vp9"'
-            ) || "no";
-
-    } catch(e) {}
-
-
-    try {
-
-        av1 =
-            video.canPlayType(
-                'video/mp4; codecs="av01.0.05M.08"'
-            ) || "no";
-
-    } catch(e) {}
-
-
-    return {
-
-        h264: h264,
-        vp9: vp9,
-        av1: av1
-
-    };
-
-}
-
-
-/*
- * UPDATE DIAGNOSTIC
- */
-
-function updateDiagnostic() {
-
-    if (!player) {
-        return;
+    if (!videoId) {
+        document.getElementById("player-container").innerHTML =
+            '<div style="color:white;font-family:Arial;text-align:center;padding-top:40px;">No YouTube video ID specified.</div>';
     }
 
-    let quality = "unknown";
-    let available = "unknown";
 
-    let playerWidth = "unknown";
-    let playerHeight = "unknown";
+    // ------------------------------------------------------------
+    // LOAD YOUTUBE IFRAME API
+    // ------------------------------------------------------------
 
+    if (videoId) {
 
-    try {
+        const tag = document.createElement("script");
 
-        quality =
-            player.getPlaybackQuality();
+        tag.src = "https://www.youtube.com/iframe_api";
 
-    } catch(e) {}
+        const firstScriptTag =
+            document.getElementsByTagName("script")[0];
 
-
-    try {
-
-        available =
-            player
-            .getAvailableQualityLevels()
-            .join(", ");
-
-    } catch(e) {}
+        firstScriptTag.parentNode.insertBefore(
+            tag,
+            firstScriptTag
+        );
+    }
 
 
-    try {
+    // ------------------------------------------------------------
+    // YOUTUBE PLAYER
+    // ------------------------------------------------------------
 
-        playerWidth =
-            player.getIframe().clientWidth;
-
-        playerHeight =
-            player.getIframe().clientHeight;
-
-    } catch(e) {}
+    let player;
 
 
-    const codecs =
-        codecTest();
+    function onYouTubeIframeAPIReady() {
 
-
-    document.getElementById(
-        "diagnostic"
-    ).innerHTML =
-
-        "<b>CAS YouTube Diagnostic</b>" +
-
-        "<br><br>" +
-
-        "<b>YouTube Quality:</b> " +
-        quality +
-
-        "<br><b>Available:</b> " +
-        available +
-
-        "<br><b>Player Size:</b> " +
-        playerWidth +
-        " x " +
-        playerHeight +
-
-        "<br><br>" +
-
-        "<b>Screen:</b> " +
-        screen.width +
-        " x " +
-        screen.height +
-
-        "<br><b>Viewport:</b> " +
-        window.innerWidth +
-        " x " +
-        window.innerHeight +
-
-        "<br><b>Pixel Ratio:</b> " +
-        window.devicePixelRatio +
-
-        "<br><br>" +
-
-        "<b>H.264:</b> " +
-        codecs.h264 +
-
-        " &nbsp; <b>VP9:</b> " +
-        codecs.vp9 +
-
-        " &nbsp; <b>AV1:</b> " +
-        codecs.av1 +
-
-        "<br><br>" +
-
-        "<b>User Agent:</b><br>" +
-        navigator.userAgent;
-
-}
-
-
-/*
- * CREATE PLAYER
- */
-
-function onYouTubeIframeAPIReady() {
-
-    player =
-        new YT.Player(
-            "player",
+        player = new YT.Player(
+            "youtube-player",
             {
 
                 width: "100%",
@@ -262,101 +124,101 @@ function onYouTubeIframeAPIReady() {
 
                 playerVars: {
 
-                    autoplay: 1,
-                    controls: 0,
-                    rel: 0,
-                    playsinline: 1,
-                    modestbranding: 1,
-                    iv_load_policy: 3,
-                    cc_load_policy: 0,
-                    fs: 0
+                    // Start automatically
+                    autoplay: autoplay,
 
+                    // Mute if requested
+                    mute: mute,
+
+                    // Don't show related videos at the end
+                    rel: 0,
+
+                    // YouTube branding
+                    modestbranding: 1,
+
+                    // Use the current origin
+                    origin: window.location.origin,
+
+                    // Request HD
+                    vq: "hd1080",
+
+                    // Do not show annotations
+                    iv_load_policy: 3,
+
+                    // Allow inline playback
+                    playsinline: 1
                 },
 
                 events: {
 
-                    onReady:
-                        onPlayerReady,
+                    onReady: function(event) {
 
-                    onStateChange:
-                        onPlayerStateChange,
+                        /*
+                         * Explicitly request 1080p after
+                         * the player becomes available.
+                         *
+                         * If 1080p is not available,
+                         * YouTube will select the highest
+                         * quality it can provide.
+                         */
 
-                    onPlaybackQualityChange:
-                        onPlaybackQualityChange
+                        try {
+                            event.target.setPlaybackQuality("hd1080");
+                        } catch (e) {
+                            console.log(
+                                "Unable to set playback quality:",
+                                e
+                            );
+                        }
 
+                        if (autoplay) {
+
+                            if (mute) {
+                                event.target.mute();
+                            }
+
+                            event.target.playVideo();
+                        }
+                    },
+
+
+                    onStateChange: function(event) {
+
+                        /*
+                         * When playback begins, request
+                         * 1080p again.
+                         */
+
+                        if (
+                            event.data ===
+                            YT.PlayerState.PLAYING
+                        ) {
+
+                            try {
+                                event.target.setPlaybackQuality(
+                                    "hd1080"
+                                );
+                            } catch (e) {
+                                console.log(
+                                    "Unable to set playback quality:",
+                                    e
+                                );
+                            }
+                        }
+                    },
+
+
+                    onError: function(event) {
+
+                        console.log(
+                            "YouTube Player Error:",
+                            event.data
+                        );
+                    }
                 }
-
             }
         );
-
-}
-
-
-/*
- * READY
- */
-
-function onPlayerReady(event) {
-
-    killCaptions(
-        event.target
-    );
-
-    event.target.playVideo();
-
-    updateDiagnostic();
-
-    setTimeout(
-        updateDiagnostic,
-        1000
-    );
-
-    setTimeout(
-        updateDiagnostic,
-        3000
-    );
-
-    setTimeout(
-        updateDiagnostic,
-        5000
-    );
-
-    setTimeout(
-        updateDiagnostic,
-        10000
-    );
-
-}
-
-
-/*
- * STATE CHANGE
- */
-
-function onPlayerStateChange(event) {
-
-    if (event.data === 1) {
-
-        killCaptions(
-            event.target
-        );
-
     }
-
-    updateDiagnostic();
-
-}
-
-
-/*
- * QUALITY CHANGE
- */
-
-function onPlaybackQualityChange() {
-
-    updateDiagnostic();
-
-}
 
 </script>
 
