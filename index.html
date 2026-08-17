@@ -2,9 +2,10 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>CAS YouTube Player</title>
+<title>CAS YouTube Player Diagnostic</title>
 
 <style>
+
 html, body {
     margin: 0;
     padding: 0;
@@ -24,21 +25,30 @@ html, body {
 
 #diagnostic {
     position: fixed;
-    top: 20px;
-    left: 20px;
+    top: 15px;
+    left: 15px;
     z-index: 999999;
+
     color: white;
-    background: black;
+    background: rgba(0,0,0,0.90);
+
     border: 2px solid white;
-    padding: 10px 15px;
+
+    padding: 12px 16px;
+
     font-family: Arial, sans-serif;
-    font-size: 20px;
-    line-height: 1.5;
+    font-size: 16px;
+    line-height: 1.45;
+
+    max-width: 700px;
+
     display: block;
     visibility: visible;
     opacity: 1;
+
     pointer-events: none;
 }
+
 </style>
 
 <script src="https://www.youtube.com/iframe_api"></script>
@@ -50,7 +60,7 @@ html, body {
 <div id="player"></div>
 
 <div id="diagnostic">
-    YouTube diagnostic loading...
+    Starting diagnostic...
 </div>
 
 <script>
@@ -71,13 +81,97 @@ let player;
 
 /*
  * REMOVE CAPTIONS
+ * This is the working code from your previous version.
  */
 
 function killCaptions(target) {
 
     try {
+
         target.unloadModule("captions");
+
     } catch(e) {}
+
+}
+
+
+/*
+ * CHECK HTML5 VIDEO CODEC SUPPORT
+ */
+
+function getVideoSupport() {
+
+    let video;
+
+    try {
+
+        video = document.createElement("video");
+
+    } catch(e) {
+
+        return {
+            h264: "error",
+            vp9: "error",
+            av1: "error"
+        };
+
+    }
+
+
+    let h264 = "unknown";
+    let vp9 = "unknown";
+    let av1 = "unknown";
+
+
+    try {
+
+        h264 =
+            video.canPlayType(
+                'video/mp4; codecs="avc1.42E01E"'
+            ) || "no";
+
+    } catch(e) {
+
+        h264 = "error";
+
+    }
+
+
+    try {
+
+        vp9 =
+            video.canPlayType(
+                'video/webm; codecs="vp9"'
+            ) || "no";
+
+    } catch(e) {
+
+        vp9 = "error";
+
+    }
+
+
+    try {
+
+        av1 =
+            video.canPlayType(
+                'video/mp4; codecs="av01.0.05M.08"'
+            ) || "no";
+
+    } catch(e) {
+
+        av1 = "error";
+
+    }
+
+
+    return {
+
+        h264: h264,
+        vp9: vp9,
+        av1: av1
+
+    };
 
 }
 
@@ -88,54 +182,155 @@ function killCaptions(target) {
 
 function updateDiagnostic() {
 
-    const diagnostic = document.getElementById("diagnostic");
+    const diagnostic =
+        document.getElementById("diagnostic");
+
 
     if (!player) {
-        diagnostic.innerHTML = "YouTube player not ready";
+
+        diagnostic.innerHTML =
+            "YouTube player not ready";
+
         return;
+
     }
+
 
     let quality = "unknown";
     let available = "unknown";
-    let width = "unknown";
-    let height = "unknown";
+
+    let playerWidth = "unknown";
+    let playerHeight = "unknown";
+
+
+    /*
+     * YouTube information
+     */
 
     try {
-        quality = player.getPlaybackQuality();
+
+        quality =
+            player.getPlaybackQuality();
+
     } catch(e) {}
 
-    try {
-        available = player.getAvailableQualityLevels().join(", ");
-    } catch(e) {}
 
     try {
-        width = player.getIframe().clientWidth;
-        height = player.getIframe().clientHeight;
+
+        available =
+            player
+                .getAvailableQualityLevels()
+                .join(", ");
+
     } catch(e) {}
+
+
+    /*
+     * Player dimensions
+     */
+
+    try {
+
+        playerWidth =
+            player.getIframe().clientWidth;
+
+        playerHeight =
+            player.getIframe().clientHeight;
+
+    } catch(e) {}
+
+
+    /*
+     * Browser information
+     */
+
+    const screenWidth =
+        window.screen.width;
+
+    const screenHeight =
+        window.screen.height;
+
+    const viewportWidth =
+        window.innerWidth;
+
+    const viewportHeight =
+        window.innerHeight;
+
+    const devicePixelRatio =
+        window.devicePixelRatio;
+
+
+    /*
+     * Video codec support
+     */
+
+    const codecs =
+        getVideoSupport();
+
+
+    /*
+     * User agent
+     */
+
+    const userAgent =
+        navigator.userAgent;
+
 
     diagnostic.innerHTML =
-        "YouTube Quality: " + quality +
-        "<br>Available: " + available +
-        "<br>Player Size: " + width + " x " + height;
 
-}
+        "<b>CAS YouTube Diagnostic</b>" +
 
+        "<br><br>" +
 
-/*
- * REQUEST 1080P
- */
+        "<b>YouTube</b>" +
 
-function request1080() {
+        "<br>Quality: " +
+        quality +
 
-    if (!player) {
-        return;
-    }
+        "<br>Available: " +
+        available +
 
-    try {
-        player.setPlaybackQuality("hd1080");
-    } catch(e) {}
+        "<br>Player Size: " +
+        playerWidth +
+        " x " +
+        playerHeight +
 
-    updateDiagnostic();
+        "<br><br>" +
+
+        "<b>Browser / Display</b>" +
+
+        "<br>Screen: " +
+        screenWidth +
+        " x " +
+        screenHeight +
+
+        "<br>Viewport: " +
+        viewportWidth +
+        " x " +
+        viewportHeight +
+
+        "<br>Pixel Ratio: " +
+        devicePixelRatio +
+
+        "<br><br>" +
+
+        "<b>Video Codec Support</b>" +
+
+        "<br>H.264: " +
+        codecs.h264 +
+
+        "<br>VP9: " +
+        codecs.vp9 +
+
+        "<br>AV1: " +
+        codecs.av1 +
+
+        "<br><br>" +
+
+        "<b>User Agent</b>" +
+
+        "<br>" +
+        userAgent;
 
 }
 
@@ -146,36 +341,64 @@ function request1080() {
 
 function onYouTubeIframeAPIReady() {
 
-    player = new YT.Player("player", {
+    player =
+        new YT.Player(
+            "player",
+            {
 
-        width: "100%",
-        height: "100%",
+                width: "100%",
+                height: "100%",
 
-        videoId: videoId,
+                videoId: videoId,
 
-        playerVars: {
+                playerVars: {
 
-            autoplay: Number(autoplay),
-            controls: Number(controls),
-            rel: Number(rel),
-            loop: Number(loop),
-            playlist: videoId,
-            playsinline: 1,
-            modestbranding: 1,
-            iv_load_policy: 3,
-            cc_load_policy: Number(cc),
-            fs: 0
+                    autoplay:
+                        Number(autoplay),
 
-        },
+                    controls:
+                        Number(controls),
 
-        events: {
+                    rel:
+                        Number(rel),
 
-            onReady: onPlayerReady,
-            onStateChange: onPlayerStateChange
+                    loop:
+                        Number(loop),
 
-        }
+                    playlist:
+                        videoId,
 
-    });
+                    playsinline: 1,
+
+                    modestbranding: 1,
+
+                    iv_load_policy: 3,
+
+                    cc_load_policy:
+                        Number(cc),
+
+                    fs: 0
+
+                },
+
+                events: {
+
+                    onReady:
+                        onPlayerReady,
+
+                    onStateChange:
+                        onPlayerStateChange,
+
+                    onPlaybackQualityChange:
+                        onPlaybackQualityChange,
+
+                    onError:
+                        onPlayerError
+
+                }
+
+            }
+        );
 
 }
 
@@ -187,21 +410,65 @@ function onYouTubeIframeAPIReady() {
 function onPlayerReady(event) {
 
     if (mute === "1") {
+
         event.target.mute();
+
     } else {
+
         event.target.unMute();
+
     }
 
+
     if (cc === "0") {
-        killCaptions(event.target);
+
+        killCaptions(
+            event.target
+        );
+
     }
+
 
     event.target.playVideo();
 
-    setTimeout(request1080, 1000);
-    setTimeout(request1080, 3000);
-    setTimeout(request1080, 5000);
-    setTimeout(request1080, 10000);
+
+    /*
+     * Update diagnostic several times
+     * as YouTube finishes initializing.
+     */
+
+    updateDiagnostic();
+
+    setTimeout(
+        updateDiagnostic,
+        1000
+    );
+
+    setTimeout(
+        updateDiagnostic,
+        3000
+    );
+
+    setTimeout(
+        updateDiagnostic,
+        5000
+    );
+
+    setTimeout(
+        updateDiagnostic,
+        10000
+    );
+
+}
+
+
+/*
+ * PLAYBACK QUALITY CHANGED
+ */
+
+function onPlaybackQualityChange(event) {
+
+    updateDiagnostic();
 
 }
 
@@ -212,23 +479,56 @@ function onPlayerReady(event) {
 
 function onPlayerStateChange(event) {
 
-    if (cc === "0" && event.data === 1) {
+    /*
+     * Remove captions when playback starts.
+     */
 
-        killCaptions(event.target);
+    if (
+        cc === "0" &&
+        event.data === 1
+    ) {
 
-        setTimeout(function() {
-            killCaptions(event.target);
-        }, 1500);
+        killCaptions(
+            event.target
+        );
+
+
+        setTimeout(
+            function() {
+
+                killCaptions(
+                    event.target
+                );
+
+            },
+            1500
+        );
 
     }
 
-    if (event.data === 1) {
 
-        setTimeout(request1080, 1000);
-        setTimeout(request1080, 3000);
-        setTimeout(request1080, 5000);
+    updateDiagnostic();
 
-    }
+}
+
+
+/*
+ * YOUTUBE ERROR
+ */
+
+function onPlayerError(event) {
+
+    document.getElementById(
+        "diagnostic"
+    ).innerHTML =
+
+        "<b>CAS YouTube Diagnostic</b>" +
+
+        "<br><br>" +
+
+        "<b>YouTube Error:</b> " +
+
+        event.data;
 
 }
 
