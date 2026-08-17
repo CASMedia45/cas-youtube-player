@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 
+<title>CAS YouTube Diagnostic</title>
+
 <style>
 
 html, body {
@@ -18,30 +20,31 @@ html, body {
     position: absolute;
     left: 0;
     top: 0;
-
     width: 100%;
-    height: calc(100% - 120px);
+    height: 100%;
 }
 
 #diagnostic {
-    position: absolute;
-    left: 0;
-    bottom: 0;
+    position: fixed;
+    top: 20px;
+    left: 20px;
 
-    width: 100%;
-    height: 120px;
-
-    box-sizing: border-box;
+    z-index: 999999;
 
     background: black;
     color: white;
 
-    padding: 10px 20px;
+    border: 3px solid red;
+
+    padding: 12px 16px;
 
     font-family: Arial, sans-serif;
     font-size: 18px;
+    line-height: 1.4;
 
-    z-index: 1000000;
+    max-width: 850px;
+
+    pointer-events: none;
 }
 
 </style>
@@ -69,64 +72,181 @@ const videoId =
 let player;
 
 
+/*
+ * CAPTIONS OFF
+ */
+
+function killCaptions(target) {
+
+    try {
+
+        target.unloadModule("captions");
+
+    } catch(e) {}
+
+}
+
+
+/*
+ * VIDEO CODEC TEST
+ */
+
+function codecTest() {
+
+    const video =
+        document.createElement("video");
+
+    let h264 = "no";
+    let vp9 = "no";
+    let av1 = "no";
+
+    try {
+
+        h264 =
+            video.canPlayType(
+                'video/mp4; codecs="avc1.42E01E"'
+            ) || "no";
+
+    } catch(e) {}
+
+
+    try {
+
+        vp9 =
+            video.canPlayType(
+                'video/webm; codecs="vp9"'
+            ) || "no";
+
+    } catch(e) {}
+
+
+    try {
+
+        av1 =
+            video.canPlayType(
+                'video/mp4; codecs="av01.0.05M.08"'
+            ) || "no";
+
+    } catch(e) {}
+
+
+    return {
+
+        h264: h264,
+        vp9: vp9,
+        av1: av1
+
+    };
+
+}
+
+
+/*
+ * UPDATE DIAGNOSTIC
+ */
+
 function updateDiagnostic() {
+
+    if (!player) {
+        return;
+    }
 
     let quality = "unknown";
     let available = "unknown";
 
-    try {
-        quality =
-            player.getPlaybackQuality();
-    } catch(e) {}
+    let playerWidth = "unknown";
+    let playerHeight = "unknown";
+
 
     try {
-        available =
-            player.getAvailableQualityLevels()
-                .join(", ");
+
+        quality =
+            player.getPlaybackQuality();
+
     } catch(e) {}
+
+
+    try {
+
+        available =
+            player
+            .getAvailableQualityLevels()
+            .join(", ");
+
+    } catch(e) {}
+
+
+    try {
+
+        playerWidth =
+            player.getIframe().clientWidth;
+
+        playerHeight =
+            player.getIframe().clientHeight;
+
+    } catch(e) {}
+
+
+    const codecs =
+        codecTest();
+
 
     document.getElementById(
         "diagnostic"
     ).innerHTML =
 
+        "<b>CAS YouTube Diagnostic</b>" +
+
+        "<br><br>" +
+
         "<b>YouTube Quality:</b> " +
         quality +
 
-        " &nbsp;&nbsp; " +
-
-        "<b>Available:</b> " +
+        "<br><b>Available:</b> " +
         available +
 
-        "<br>" +
+        "<br><b>Player Size:</b> " +
+        playerWidth +
+        " x " +
+        playerHeight +
+
+        "<br><br>" +
 
         "<b>Screen:</b> " +
         screen.width +
         " x " +
         screen.height +
 
-        " &nbsp;&nbsp; " +
-
-        "<b>Viewport:</b> " +
+        "<br><b>Viewport:</b> " +
         window.innerWidth +
         " x " +
         window.innerHeight +
 
-        " &nbsp;&nbsp; " +
+        "<br><b>Pixel Ratio:</b> " +
+        window.devicePixelRatio +
 
-        "<b>Pixel Ratio:</b> " +
-        window.devicePixelRatio;
+        "<br><br>" +
+
+        "<b>H.264:</b> " +
+        codecs.h264 +
+
+        " &nbsp; <b>VP9:</b> " +
+        codecs.vp9 +
+
+        " &nbsp; <b>AV1:</b> " +
+        codecs.av1 +
+
+        "<br><br>" +
+
+        "<b>User Agent:</b><br>" +
+        navigator.userAgent;
 
 }
 
 
-function killCaptions(target) {
-
-    try {
-        target.unloadModule("captions");
-    } catch(e) {}
-
-}
-
+/*
+ * CREATE PLAYER
+ */
 
 function onYouTubeIframeAPIReady() {
 
@@ -155,55 +275,86 @@ function onYouTubeIframeAPIReady() {
 
                 events: {
 
-                    onReady: function(event) {
-
-                        killCaptions(
-                            event.target
-                        );
-
-                        event.target.playVideo();
-
-                        updateDiagnostic();
-
-                        setTimeout(
-                            updateDiagnostic,
-                            2000
-                        );
-
-                        setTimeout(
-                            updateDiagnostic,
-                            5000
-                        );
-
-                        setTimeout(
-                            updateDiagnostic,
-                            10000
-                        );
-
-                    },
+                    onReady:
+                        onPlayerReady,
 
                     onStateChange:
-                        function(event) {
-
-                            killCaptions(
-                                event.target
-                            );
-
-                            updateDiagnostic();
-
-                        },
+                        onPlayerStateChange,
 
                     onPlaybackQualityChange:
-                        function(event) {
-
-                            updateDiagnostic();
-
-                        }
+                        onPlaybackQualityChange
 
                 }
 
             }
         );
+
+}
+
+
+/*
+ * READY
+ */
+
+function onPlayerReady(event) {
+
+    killCaptions(
+        event.target
+    );
+
+    event.target.playVideo();
+
+    updateDiagnostic();
+
+    setTimeout(
+        updateDiagnostic,
+        1000
+    );
+
+    setTimeout(
+        updateDiagnostic,
+        3000
+    );
+
+    setTimeout(
+        updateDiagnostic,
+        5000
+    );
+
+    setTimeout(
+        updateDiagnostic,
+        10000
+    );
+
+}
+
+
+/*
+ * STATE CHANGE
+ */
+
+function onPlayerStateChange(event) {
+
+    if (event.data === 1) {
+
+        killCaptions(
+            event.target
+        );
+
+    }
+
+    updateDiagnostic();
+
+}
+
+
+/*
+ * QUALITY CHANGE
+ */
+
+function onPlaybackQualityChange() {
+
+    updateDiagnostic();
 
 }
 
