@@ -14,8 +14,10 @@ html,body{
 }
 
 #player{
-    width:100%;
-    height:100%;
+    width:1920px;
+    height:1080px;
+    max-width:100%;
+    max-height:100%;
 }
 
 #diagnostic{
@@ -40,7 +42,10 @@ html,body{
 <body>
 
 <div id="player"></div>
-<div id="diagnostic">Loading...</div>
+
+<div id="diagnostic">
+    Loading...
+</div>
 
 <script>
 
@@ -57,6 +62,13 @@ const cc = params.get("cc") || "0";
 
 let player;
 
+
+/*
+ * CAPTION REMOVAL
+ * This is the code that has been successfully
+ * eliminating captions on the BrightSign.
+ */
+
 function killCaptions(target){
 
     try{
@@ -64,6 +76,47 @@ function killCaptions(target){
     }catch(e){}
 
 }
+
+
+/*
+ * DIAGNOSTIC INFORMATION
+ */
+
+function updateDiagnostic(){
+
+    if(!player){
+        return;
+    }
+
+    let quality = "unknown";
+    let available = "unknown";
+    let playerWidth = "unknown";
+    let playerHeight = "unknown";
+
+    try{
+        quality = player.getPlaybackQuality();
+    }catch(e){}
+
+    try{
+        available = player.getAvailableQualityLevels().join(", ");
+    }catch(e){}
+
+    try{
+        playerWidth = player.getIframe().clientWidth;
+        playerHeight = player.getIframe().clientHeight;
+    }catch(e){}
+
+    document.getElementById("diagnostic").innerHTML =
+        "YouTube Quality: " + quality +
+        "<br>Available: " + available +
+        "<br>Player Size: " + playerWidth + " x " + playerHeight;
+
+}
+
+
+/*
+ * REQUEST 1080P
+ */
 
 function request1080(){
 
@@ -79,43 +132,17 @@ function request1080(){
 
 }
 
-function updateDiagnostic(){
 
-    if(!player){
-        return;
-    }
-
-    let quality = "unknown";
-    let available = "unknown";
-    let videoWidth = "unknown";
-    let videoHeight = "unknown";
-
-    try{
-        quality = player.getPlaybackQuality();
-    }catch(e){}
-
-    try{
-        available = player.getAvailableQualityLevels().join(", ");
-    }catch(e){}
-
-    try{
-        videoWidth = player.getIframe().clientWidth;
-        videoHeight = player.getIframe().clientHeight;
-    }catch(e){}
-
-    document.getElementById("diagnostic").innerHTML =
-        "YouTube Quality: " + quality +
-        "<br>Available: " + available +
-        "<br>Player Size: " + videoWidth + " x " + videoHeight;
-
-}
+/*
+ * CREATE YOUTUBE PLAYER
+ */
 
 function onYouTubeIframeAPIReady(){
 
     player = new YT.Player("player",{
 
-        width:"100%",
-        height:"100%",
+        width:"1920",
+        height:"1080",
 
         videoId:videoId,
 
@@ -141,6 +168,11 @@ function onYouTubeIframeAPIReady(){
 
 }
 
+
+/*
+ * PLAYER READY
+ */
+
 function onPlayerReady(event){
 
     if(mute==="1"){
@@ -156,8 +188,7 @@ function onPlayerReady(event){
     event.target.playVideo();
 
     /*
-     * Give YouTube time to begin playback,
-     * then request 1080p.
+     * Request 1080 after playback begins.
      */
 
     setTimeout(request1080,1000);
@@ -167,19 +198,34 @@ function onPlayerReady(event){
 
 }
 
+
+/*
+ * PLAYER STATE CHANGES
+ */
+
 function onPlayerStateChange(event){
+
+    /*
+     * Continue removing captions.
+     */
 
     if(cc==="0" && event.data === 1){
 
         killCaptions(event.target);
 
         setTimeout(function(){
+
             killCaptions(event.target);
+
         },1500);
 
-        /*
-         * Request 1080p after playback has actually started.
-         */
+    }
+
+    /*
+     * Request 1080 after playback actually starts.
+     */
+
+    if(event.data === 1){
 
         setTimeout(request1080,1000);
         setTimeout(request1080,3000);
@@ -190,6 +236,9 @@ function onPlayerStateChange(event){
 }
 
 </script>
+
+</body>
+</html>
 
 </body>
 </html>
