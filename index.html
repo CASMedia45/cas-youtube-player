@@ -57,6 +57,28 @@ const cc = params.get("cc") || "0";
 
 let player;
 
+function killCaptions(target){
+
+    try{
+        target.unloadModule("captions");
+    }catch(e){}
+
+}
+
+function request1080(){
+
+    if(!player){
+        return;
+    }
+
+    try{
+        player.setPlaybackQuality("hd1080");
+    }catch(e){}
+
+    updateDiagnostic();
+
+}
+
 function updateDiagnostic(){
 
     if(!player){
@@ -77,10 +99,6 @@ function updateDiagnostic(){
     }catch(e){}
 
     try{
-        videoWidth = player.getVideoData().video_id;
-    }catch(e){}
-
-    try{
         videoWidth = player.getIframe().clientWidth;
         videoHeight = player.getIframe().clientHeight;
     }catch(e){}
@@ -89,6 +107,7 @@ function updateDiagnostic(){
         "YouTube Quality: " + quality +
         "<br>Available: " + available +
         "<br>Player Size: " + videoWidth + " x " + videoHeight;
+
 }
 
 function onYouTubeIframeAPIReady(){
@@ -122,14 +141,6 @@ function onYouTubeIframeAPIReady(){
 
 }
 
-function killCaptions(target){
-
-    try{
-        target.unloadModule("captions");
-    }catch(e){}
-
-}
-
 function onPlayerReady(event){
 
     if(mute==="1"){
@@ -142,18 +153,17 @@ function onPlayerReady(event){
         killCaptions(event.target);
     }
 
-    /*
-     * Request 1080p.
-     */
-    try{
-        event.target.setPlaybackQuality("hd1080");
-    }catch(e){}
-
     event.target.playVideo();
 
-    setTimeout(updateDiagnostic,1000);
-    setTimeout(updateDiagnostic,3000);
-    setTimeout(updateDiagnostic,6000);
+    /*
+     * Give YouTube time to begin playback,
+     * then request 1080p.
+     */
+
+    setTimeout(request1080,1000);
+    setTimeout(request1080,3000);
+    setTimeout(request1080,5000);
+    setTimeout(request1080,10000);
 
 }
 
@@ -167,16 +177,13 @@ function onPlayerStateChange(event){
             killCaptions(event.target);
         },1500);
 
-    }
+        /*
+         * Request 1080p after playback has actually started.
+         */
 
-    if(event.data === 1){
-
-        try{
-            event.target.setPlaybackQuality("hd1080");
-        }catch(e){}
-
-        setTimeout(updateDiagnostic,1000);
-        setTimeout(updateDiagnostic,3000);
+        setTimeout(request1080,1000);
+        setTimeout(request1080,3000);
+        setTimeout(request1080,5000);
 
     }
 
