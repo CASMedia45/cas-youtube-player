@@ -1,161 +1,188 @@
-```html
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAS YouTube Player</title>
+<meta charset="UTF-8">
+<title>CAS YouTube Player</title>
 
-    <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            overflow: hidden;
-        }
+<style>
+html,body{
+    margin:0;
+    width:100%;
+    height:100%;
+    background:black;
+    overflow:hidden;
+}
 
-        #player {
-            width: 100%;
-            height: 100%;
-        }
+#player{
+    width:100%;
+    height:100%;
+}
 
-        /* Temporary diagnostic display */
-        #quality {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 9999;
-            background: rgba(0, 0, 0, 0.85);
-            color: white;
-            padding: 10px 14px;
-            font-family: Arial, sans-serif;
-            font-size: 20px;
-            border-radius: 4px;
-        }
-    </style>
+#diagnostic{
+    position:absolute;
+    top:10px;
+    left:10px;
+    z-index:9999;
+    color:white;
+    background:rgba(0,0,0,0.75);
+    padding:8px 12px;
+    font-family:Arial,sans-serif;
+    font-size:16px;
+    line-height:1.4;
+    pointer-events:none;
+}
+</style>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+
 </head>
 
 <body>
 
-    <div id="player"></div>
+<div id="player"></div>
+<div id="diagnostic">Loading...</div>
 
-    <!-- Temporary quality diagnostic -->
-    <div id="quality">
-        YouTube Quality: Waiting...
-    </div>
+<script>
 
-    <script src="https://www.youtube.com/iframe_api"></script>
+const params = new URLSearchParams(window.location.search);
 
-    <script>
-        // Get parameters from the URL
-        const params = new URLSearchParams(window.location.search);
+const videoId = params.get("videoId");
 
-        const videoId = params.get("videoId");
-        const autoplay = params.get("autoplay") || "1";
-        const mute = params.get("mute") || "0";
+const autoplay = params.get("autoplay") || "1";
+const mute = params.get("mute") || "0";
+const controls = params.get("controls") || "0";
+const loop = params.get("loop") || "1";
+const rel = params.get("rel") || "0";
+const cc = params.get("cc") || "0";
 
-        let player;
+let player;
 
-        // YouTube API calls this automatically when it is ready
-        function onYouTubeIframeAPIReady() {
+function updateDiagnostic(){
 
-            player = new YT.Player("player", {
+    if(!player){
+        return;
+    }
 
-                width: "100%",
-                height: "100%",
+    let quality = "unknown";
+    let available = "unknown";
+    let videoWidth = "unknown";
+    let videoHeight = "unknown";
 
-                videoId: videoId,
+    try{
+        quality = player.getPlaybackQuality();
+    }catch(e){}
 
-                playerVars: {
-                    autoplay: Number(autoplay),
-                    controls: 0,
-                    rel: 0,
-                    playsinline: 1,
-                    modestbranding: 1,
-                    iv_load_policy: 3
-                },
+    try{
+        available = player.getAvailableQualityLevels().join(", ");
+    }catch(e){}
 
-                events: {
-                    onReady: onPlayerReady,
-                    onStateChange: onPlayerStateChange,
-                    onPlaybackQualityChange: onPlaybackQualityChange
-                }
-            });
+    try{
+        videoWidth = player.getVideoData().video_id;
+    }catch(e){}
+
+    try{
+        videoWidth = player.getIframe().clientWidth;
+        videoHeight = player.getIframe().clientHeight;
+    }catch(e){}
+
+    document.getElementById("diagnostic").innerHTML =
+        "YouTube Quality: " + quality +
+        "<br>Available: " + available +
+        "<br>Player Size: " + videoWidth + " x " + videoHeight;
+}
+
+function onYouTubeIframeAPIReady(){
+
+    player = new YT.Player("player",{
+
+        width:"100%",
+        height:"100%",
+
+        videoId:videoId,
+
+        playerVars:{
+            autoplay:Number(autoplay),
+            controls:Number(controls),
+            rel:Number(rel),
+            loop:Number(loop),
+            playlist:videoId,
+            playsinline:1,
+            modestbranding:1,
+            iv_load_policy:3,
+            cc_load_policy:Number(cc),
+            fs:0
+        },
+
+        events:{
+            onReady:onPlayerReady,
+            onStateChange:onPlayerStateChange
         }
 
-        // Player ready
-        function onPlayerReady(event) {
+    });
 
-            if (mute === "1") {
-                event.target.mute();
-            } else {
-                event.target.unMute();
-            }
+}
 
-            event.target.playVideo();
-        }
+function killCaptions(target){
 
-        // Player state changed
-        function onPlayerStateChange(event) {
+    try{
+        target.unloadModule("captions");
+    }catch(e){}
 
-            // Keep video playing if YouTube pauses unexpectedly
-            if (event.data === YT.PlayerState.PAUSED) {
-                event.target.playVideo();
-            }
-        }
+}
 
-        // This is the important diagnostic function
-        function onPlaybackQualityChange(event) {
+function onPlayerReady(event){
 
-            const quality = event.data;
+    if(mute==="1"){
+        event.target.mute();
+    }else{
+        event.target.unMute();
+    }
 
-            let displayQuality = quality;
+    if(cc==="0"){
+        killCaptions(event.target);
+    }
 
-            switch (quality) {
+    /*
+     * Request 1080p.
+     */
+    try{
+        event.target.setPlaybackQuality("hd1080");
+    }catch(e){}
 
-                case "highres":
-                    displayQuality = "HIGH RESOLUTION";
-                    break;
+    event.target.playVideo();
 
-                case "hd1080":
-                    displayQuality = "1080p";
-                    break;
+    setTimeout(updateDiagnostic,1000);
+    setTimeout(updateDiagnostic,3000);
+    setTimeout(updateDiagnostic,6000);
 
-                case "hd720":
-                    displayQuality = "720p";
-                    break;
+}
 
-                case "large":
-                    displayQuality = "480p";
-                    break;
+function onPlayerStateChange(event){
 
-                case "medium":
-                    displayQuality = "360p";
-                    break;
+    if(cc==="0" && event.data === 1){
 
-                case "small":
-                    displayQuality = "240p";
-                    break;
-            }
+        killCaptions(event.target);
 
-            document.getElementById("quality").innerHTML =
-                "YouTube Quality: <strong>" +
-                displayQuality +
-                "</strong><br>" +
-                "API: " +
-                quality +
-                "<br>" +
-                "Viewport: " +
-                window.innerWidth +
-                " x " +
-                window.innerHeight;
+        setTimeout(function(){
+            killCaptions(event.target);
+        },1500);
 
-            console.log("YouTube playback quality:", quality);
-        }
-    </script>
+    }
+
+    if(event.data === 1){
+
+        try{
+            event.target.setPlaybackQuality("hd1080");
+        }catch(e){}
+
+        setTimeout(updateDiagnostic,1000);
+        setTimeout(updateDiagnostic,3000);
+
+    }
+
+}
+
+</script>
 
 </body>
 </html>
-```
